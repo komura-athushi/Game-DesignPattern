@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>デザインパターン2 第四章</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <link rel="stylesheet" href="../css/template.css">
+    <script src="../js/template.js"></script>
+  </head>
+
+    <body>
+      
+      <div id="box">
+      </div>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
+      </script>
+      <script>
+        jQuery(function(){
+          $('#box').load('html/header.html') // #headerにheader.htmlを読み込む
+        });
+      </script>
+      <div class="title">
+        <h1>第四章 Observerパターン</h1>
+      </div>
+      <div class="letter-body">
+        <ul id="list1">
+          <li id="1"><h2 class="margin-letter2">4.1 Observerパターン</h2></li>
+          <div class="letter">
+            <div>
+                第四章ではObserver(オブザーバー)パターンについて見ていきましょう。
+                Observerパターンは、<span class="strong-letter">Subject(観察される側)の状態が変化した際にObserver(観察する側)に通知されるデザインパターン</span>です
+                (<a href="https://qiita.com/shoheiyokoyama/items/d4b844ed29f84a80795b">参照</a>)。
+                数あるデザインパターンの中でも、特に広く使われているデザインパターンの1つになります。
+                <br>早速、使用例を見ていきましょう。
+                <div class="margin-letter">
+                    あなたはアクションゲームの開発でプレイヤーのプログラムを担当しています。
+                    ある時、他のチームメンバーから「プレイヤーが死んだ時に、実績解除したい！」と言われました。
+                    またある時は、「プレイヤーが死んだときに、BGMを流したい!」と言われました。
+                    プレイヤークラスにドンドンプログラムが追加されていきます。
+                </div>
+                <div class="margin-letter">
+                    <code>
+                        <ol class="code-region row coll-11">
+                        <li>void Player::Dead()</li>
+                        <li>{</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//....</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤーが死んだときのBGMを流す。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;PlayBGMPlayerDead();</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤーが死んだときの実績を解除する。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;UnlockPlayerIsDead();</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//まだまだ増える。</font></li>
+                        <li>}</li>
+                        </ol></code>
+                </div>
+                <div class="margin-letter">
+                    その他にも、「ジャンプしたときに....」、「攻撃したときに......」、キリがありません。
+                    あなたは、プレイヤークラスにプレイヤーと直接関係ないプログラムが増えることに問題を感じていました。
+                    一体どうすれば、この問題を解決できるでしょうか。
+                </div>
+                <div class="margin-letter">
+                    そこで、Observerパターンの出番です。
+                    <br>まず、Observerクラス(監視者)を定義します。
+                </div>
+                <div class="margin-letter">
+                    <code>
+                        <ol class="code-region row coll-11">
+                        <li><font style="color:lightgreen;font-style:italic;">//Observer(監視者)の基底クラス。</font></li>
+                        <li>class Observer</li>
+                        <li>{</li>
+                        <li>public:</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;virtual ~Observer() {}</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//Subject(監視対象者)からの通知を受け取る。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//Eventは通知の種類。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;virtual void OnNotify(Event event) = 0;</li>
+                        <li>};</li>
+                        <li></li>
+                        <li><font style="color:lightgreen;font-style:italic;">//サウンドエンジン。</font></li>
+                        <li>class SoundEngine : public Observer</li>
+                        <li>{</li>
+                        <li>public:</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;SoundEngine();</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;~SoundEngine() override {} </li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;void OnNotify(Event event) override</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;switch (event)</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤーが死んだなら。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case PLAYER_DEAD:</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤーが死んだときのBGMを流す。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PlayBGMPlayerDead();</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤーがジャンプしたなら。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case PLAYER_JUMP:</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤーがジャンプした時のジャンプ音を鳴らす。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PlayerSEPlayerJump();</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                        <li>};</li>
+                        <li></li>
+                        <li><font style="color:lightgreen;font-style:italic;">//実績を管理する。</font></li>
+                        <li>class Achievement : public Observer</li>
+                        <li>{</li>
+                        <li>public:</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;Achievement();</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;~Achievement() override {}</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;void OnNotify(Event event) override</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;switch (event)</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤーが死んだなら。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case PLAYER_DEAD:</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤーが死んだ実績を解除。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;UnlockPlayerIsDead();</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤーが落下したなら。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case PLAYER_FOLL:</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤーが落下した実績を解除。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;UnlockPlayerFoll();</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                        <li>};</li>
+                        </ol></code>
+                </div>
+                <div class="margin-letter">
+                    次に、Subject(監視対象者)を定義します。この場合ですと、プレイヤークラスがこれに当たります。
+                </div>
+                <div class="margin-letter">
+                    <code>
+                        <ol class="code-region row coll-11">
+                        <li><font style="color:lightgreen;font-style:italic;">//監視対象者。</font></li>
+                        <li>class Subject</li>
+                        <li>{</li>
+                        <li>public:</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//配列にObserverを追加。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;void AddObserver(Observer* observer)</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//配列からObserverを削除。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;void RemoveObserver(Observer* observer)</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                        <li>protected:</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//オブザーバーに通知を送信する。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//継承クラスから呼ぶ。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;void Notify(Event event)</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (auto observer : m_observerList)</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//各オブザーバーに通知を送信する。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m_observerList-&gt;OnNotify(event);</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                        <li>private:</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//オブザーバーの配列。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;std::vector&lt;Observer&gt; m_observerList;</li>
+                        <li>};</li>
+                        <li></li>
+                        <li><font style="color:lightgreen;font-style:italic;">//プレイヤー、Subjectクラスを継承。</font></li>
+                        <li>class Player : public Subject</li>
+                        <li>{</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤーが死んだら。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;void Dead()</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//オブザーバーに死んだことを通知。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Notify(PLAYER_DEAD);</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;</li>
+                        <li>};</li>
+                        </ol></code>
+                </div>
+                <div class="margin-letter">
+                    ここでのポイントは、SubjectにObserverの配列を保持させ、Observerごとに通知を送信させることです。
+                    これによって、<span class="strong-letter">Observer相互間の独立性を保つ</span>ことができるので、実績解除システムとサウンドエンジンでフラグがごっちゃになることが無くなります。
+                    <br>あとは、Subjectの配列にObserverを追加するだけです。
+                </div>
+                <div class="margin-letter">
+                    <code>
+                        <ol class="code-region row coll-11">
+                        <li>class Game</li>
+                        <li>{</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//ゲーム開始。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;bool Start()</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                        <li></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m_soundEngine = new SoundEngine();</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m_achievement = new Achievement();</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m_player = new Player();</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤー(Subject)にObserverを追加していく。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m_player-&gt;AddObserver(m_soundEngine);</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m_player-&gt;AddObserver(m_achievement);</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                        <li>private:</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//サウンドエンジン。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;Observer* m_soundEngine = nullptr;</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//実績解除クラス。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;Observer* m_achievement = nullptr;</li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//プレイヤー。</font></li>
+                        <li>&nbsp;&nbsp;&nbsp;&nbsp;Player* m_player = nullptr;</li>
+                        <li>};</li>
+                        </ol></code>
+                </div>
+                <div class="margin-letter">
+                    何ということでしょうか、先ほどのプレイヤーのプログラムがたった一行にまとまってしまいました！
+                    また、プレイヤークラスからはサウンドエンジンなどの実装が隠蔽されており、サウンドエンジンからはプレイヤークラスの実装が隠蔽されて、
+                    プログラム間の依存性を少なくすることにも成功しました。
+                </div>
+                <div class="margin-letter">
+                    このように、Observerパターンは、音を鳴らしたり実績を解除したりUIの実装など様々な場面で活用することができます。
+                </div>
+            </div>
+          </div>
+          <li id="2"><h2 class="margin-letter2">4.2 練習問題1</h2></li>
+          <div class="letter">
+            <div>
+                practice/Observer/Practice1/Game.slnからVisualStudioを立ち上げてください。
+                実行すると、A・Bキーを押すと音が鳴り、Enterキーを押すとテキストが表示されるようになっています。
+                <div>
+                    <img src="image/3/1.png" class="margin-letter">
+                </div>
+                <div class="margin-letter">
+                    <span class="strong-letter">ActorクラスとGameクラスを改造して、A・Bキーが押された時に音が鳴る処理を、Observerパターンを用いた実装に変更してください。</span>
+                    <ul>
+                        <li>Achievementクラスを参考にして、Observerクラスを継承した音を鳴らすクラスを作成してください。</li>
+                        <li>Answerに実装例がありますので、参考にしてください。</li>
+                    </ul>
+                </div>
+            </div>
+          </div>
+          <li id="3"><h2 class="margin-letter2">4.3 問題点</h2></li>
+          <div class="letter">
+            <div>
+              Observerパターンにも批判がないわけではありません。
+              それでは、Observerパターンでよく批判される点を見ていきましょう。
+              <div class="margin-letter">
+                <ol>
+                  <div class="margin-letter">
+                    <h5><li>処理速度が遅い</li></h5>
+                  
+                    よくObserverパターンの詳細を知らないプログラマーからの批判に、「処理速度が遅い」
+                    そういう人たちは、継承や間接参照(ポインタ)といったものは処理速度を遅くしてしまうという、先入観を持ってしまっています。
+                    <br>ですが、Observerパターンを学んだ皆さんなら、これが事実ではないことがお分かりでしょう。
+                    Observerパターンは、SubjectからObserverのリストを順に見て仮想関数を呼び出すだけなのです。確かに静的バッチより実行速度がほんの少し遅くなりますが(仮想関数は動的バッチになる？)、これは無視できるものです。
+                    そもそも、<span class="strong-letter">Observerパターンは実行頻度がそれほど高くない部分に使用する</span>ものであり、処理速度が遅いという問題は問題にするほどのことではありません。
+                  </div>
+                  <div class="margin-letter">
+                    <h5><li>動的メモリ確保の処理が多すぎる</li></h5>
+                  
+                    先ほどの実装例では、SubjectにObserverの配列を持たせ、Observerの登録や削除に対応しました。
+                    しかし、<span class="strong-letter">Observerの登録・削除には、動的メモリ確保やメモリ解放(プログラム実行中にメモリ確保・解放が行われること)</span>が行われてしまいます。
+                    ゲームの開始時に、Observerの登録・削除を行うようにすれば、メモリは最小限の量で確保され保持されます。
+                    <br>それでも動的メモリ確保が問題だという場合のために、動的メモリ確保を全く伴わずにObserverの登録と削除を行う方法を見ていきましょう。
+                  </div>
+                </ol>  
+              </div>
+            </div>
+          </div>
+          <li id="4"><h2 class="margin-letter2">4.4 連結オブザーバー</h2></li>
+          <div class="letter">
+            <div>
+              <span class="strong-letter">連結リスト</span>を使用します。今回は、連結リストの中でも、<span class="strong-letter">片方向リスト</span>を作成したいと思います。
+              詳しくはこちらのサイトを参照してください。<a href="https://ufcpp.net/study/algorithm/col_flist.html">片方向連結リスト</a>
+              <br>図にするとこのような感じです。
+              <div>
+                <img src="image/3/2.png" class="margin-letter">
+              </div>
+              <div class="margin-letter">
+                ではまず、Observerに連結リストの次のObserverへアクセスするためのメンバ変数m_nextを宣言しましょう。
+                Subjectからアクセスしたいので、Subjectをフレンドクラスに設定します。
+              </div>
+              <div class="margin-letter">
+                <code>
+                  <ol class="code-region row coll-11">
+                  <li>class Observer</li>
+                  <li>{</li>
+                  <li>public:</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;virtual ~Observer() {}</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;virtual void OnNotify(EnEvent eventType) = 0;</li>
+                  <li>private:</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;"><font style="color:lightgreen;font-style:italic;">//Subjectからm_nextにアクセスしたいので、フレンドクラスにする。</span></font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">friend class Subject;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;"><font style="color:lightgreen;font-style:italic;">//連結リストの次の要素であるObserverのポインタ。</span></font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">Observer* m_next = nullptr;</span></li>
+                  <li>};</li>
+                  </ol></code>
+              </div>
+              <div class="margin-letter">
+                Subjectには、Observerの連結リストの先頭のポインタを保持させるようにします。
+                また、配列から連結リストへの変更に伴い、各メンバ関数を修正します。
+              </div>
+              <div class="margin-letter">
+                <code>
+                  <ol class="code-region row coll-11">
+                  <li>class Subject : public IGameObject</li>
+                  <li>{</li>
+                  <li>public:</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;~Subject() override{}</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;virtual bool Start()override { return true; }</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;virtual void Update()override{}</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//オブザーバーを連結リストに追加する。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;void AddObserver(Observer* observer)</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;"><font style="color:lightgreen;font-style:italic;">//オブザーバーを連結リストの先頭に追加する。</span></font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">observer-&gt;m_next = m_head;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">m_head = observer;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//オブザーバーを連結リストから除去する。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;void RemoveObserver(Observer* observer)</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;"><font style="color:lightgreen;font-style:italic;">//除去するオブザーバーが連結リストの先頭なら。</span></font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">if (m_head == observer)</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">{</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">m_head = observer-&gt;m_next;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">observer-&gt;m_next = nullptr;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">return;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">}</span></li>
+                  <li></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">Observer* currentObserver = m_head;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">while (currentObserver != nullptr)</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">{</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">if (currentObserver-&gt;m_next == observer)</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">{</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">currentObserver-&gt;m_next = observer-&gt;m_next;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">observer-&gt;m_next = nullptr;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">return;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">}</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">currentObserver = currentObserver-&gt;m_next;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">}</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                  <li>protected:</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//オブザーバーにイベントを通知。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;void Notify(EnEvent eventType)</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;"><font style="color:lightgreen;font-style:italic;">//連結リストでそれぞれの要素にアクセスする際の基本の形。</span></font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">Observer* currentObserver = m_head;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">while (currentObserver != nullptr)</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">{</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">currentObserver-&gt;OnNotify(eventType);</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">currentObserver = currentObserver-&gt;m_next;</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">}</span></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                  <li>private:</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;"><font style="color:lightgreen;font-style:italic;">//Observer連結リストの先頭のポインタ。</span></font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: red;border-bottom:solid 1px red;font-weight:bold;">Observer* m_head = nullptr;</span></li>
+                  <li>};</li>
+                  </ol></code>
+              </div>
+              <div class="margin-letter">
+                以上です。関数の引数は変更していないので、SubjectにObserverを追加する部分は変更ありません。
+                <br>しかし、この場合ですと動的確保は行われませんが、Observerは一度に単一のSubjectしか監視することができません。
+                Observer自身が連結リストのノードになっているためです。勿論、それを回避する方法もあるのですが、長くなるので割愛させていただきます(概要は書籍に)。
+              </div>
+            </div>
+          </div>
+          <li id="5"><h2 class="margin-letter2">4.5 練習問題2</h2></li>
+          <div class="letter">
+            <div>
+              practice/Observer/Practice2/Game.slnからVisualStudioを立ち上げてください。
+              練習問題1と同じように、A・Bキーを押すと音が鳴り、Enterキーでテキストが表示されるようになっています。
+              <span class="strong-letter">SubjectにObserverの配列を保持させていますが、Observerの片方向リストを使用するように変更してください。</span>
+              <ul>
+                <li>Answerに実装例がありますので、参考にしてください。</li>
+                <li>出来た学生は、片方向リストを双方向リストにしてみてください(<a href="https://ufcpp.net/study/algorithm/col_blist.html">参考</a>)。</li>
+              </ul>
+            </div>
+          </div>
+        </ul>
+    </div>
+</body>
+</html>

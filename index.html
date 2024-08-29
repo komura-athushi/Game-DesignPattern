@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>デザインパターン2 ホーム</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/template.css">
+  </head>
+
+    <body>
+      <div id="box">
+      </div>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
+      </script>
+      <script>
+        jQuery(function(){
+          $('#box').load('html/header.html') // #headerにheader.htmlを読み込む
+        });
+      </script>
+      <div class="letter-body">
+        <ul>
+          <li>この教材は、GameProgrammingPatternsを私なりに解釈してまとめたものです。</li>
+          <li><a href="https://github.com/komura-athushi/DesignPattern2.git">git cloneしてください。</a>また、逐一更新されます。</li>
+          <li>所々端折っています(詳細は書籍)。</li>
+          <li>この教材の目的は、ゲーム開発におけるデザインパターンの活用方法を学ぶことです。</li>
+        </ul>
+      </div>
+      <div class="letter">
+        <div>
+          更新履歴
+          <ul>
+            <li>9/29 第六章 Stateパターン 追加(6.2まで)</li>
+            <li>10/1 第六章 Stateパターン 更新(6.4まで)</li>
+            <li>10/4 第六章 Stateパターン 更新(6.5まで)</li>
+            <li>10/11 第七章 DoubleBufferパターン 追加</li>
+            <li>10/20 第八章 GameLoopパターン 追加</li>
+            <li>10/22 第五章 Singletonパターン 更新</li>
+            <li>10/26 第九章 UpdateMethodパターン 追加</li>
+            <li>11/8 第十章 DataLocalityパターン 追加</li>
+            <li>11/10 第十一章 ObjectPoolパターン追加</li>
+          </ul>
+        </div>
+      </div>
+    </body>
+
+</html>

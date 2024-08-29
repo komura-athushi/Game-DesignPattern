@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>デザインパターン2 第三章</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <link rel="stylesheet" href="../css/template.css">
+    <script src="../js/template.js"></script>
+  </head>
+
+    <body>
+      
+      <div id="box">
+      </div>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js">
+      </script>
+      <script>
+        jQuery(function(){
+          $('#box').load('html/header.html') // #headerにheader.htmlを読み込む
+        });
+      </script>
+      <div class="title">
+        <h1>第三章 Fly Weightパターン</h1>
+      </div>
+      <div class="letter-body">
+        <ul id="list1">
+          <li id="1"><h2 class="margin-letter2">3.1 Fly Weightパターン</h2></li>
+          <div class="letter">
+            <div>
+                第三章では、Fly Wightパターンについて見ていきましょう。
+                Fly Weightパターンは、<span class="strong-letter">等価なインスタンスを別々の箇所で使用する際に、1つのインスタンスを再利用する</span>デザインパターンです(Wikipediaより)。
+                ゲームでは様々な箇所でFly Weightパターンが利用されていますが、今回はその中でも特にゲーム実行時に影響の大きい<span class="strong-letter">インスタンシング描画</span>について見ていきましょう。
+                <div class="margin-letter">
+                    ゲームでは、以下のように同じオブジェクトを大量に描画しなければならない場面が存在します。
+                </div>
+                <div>
+                    <img src="image/2/1.jpg" class="margin-letter">
+                    <br>ファイアーエムブレム無双 風化雪月より
+                </div>
+                <div class="margin-letter">
+                    敵キャラクターが大量に描画されているのが分かるでしょうか。キャラクターだけでなく、草や木などのオブジェクトを大量に描画しなければならない場面もありますよね。
+                    <br>この際に、1つのオブジェクトごとにモデルデータを用意していては、メモリを大量消費してしまうことになりますし、処理も遅くなってしまいます。
+                </div>
+                <div>
+                    <img src="image/2/2.png" class="margin-letter">
+                </div>
+                <div class="margin-letter">
+                    オブジェクトの数が少なければ大丈夫ですが、何百・何千個ともなるとメモリや処理速度への影響は計り知れません。
+                    では、どうすればいいのでしょうか。
+                </div>
+                <div class="margin-letter">
+                    この場合、描画するオブジェクトのモデルが同じなのであれば、そのモデルデータを再利用しましょう。
+                    位置情報はそれぞれ別なので、これは再利用できませんね。
+                </div>
+                <div>
+                    <img src="image/2/3.png" class="margin-letter">
+                </div>
+                <div class="margin-letter">
+                    これが、<span class="strong-letter">インスタンシング描画</span>の概念になります。
+                </div>
+                <div class="margin-letter">
+                    k2Engineでは、ModelRenderクラスにインスタンシング描画の機能が実装されています。ModelRenderに行列の配列を持たせることで、インスタンシング描画を実装しています。
+                    1つのモデルデータとこの行列配列により、1回のドローコールで一気にモデルを描画してしまいます。
+                </div>
+                <div>
+                    <img src="image/2/4.png" class="margin-letter">
+                </div>
+                <div class="margin-letter">
+                  この行列の配列がGPUメモリ(VRAM)に送られ、１回のドローコールで、配列の要素数回分だけモデルの描画処理が行われます。
+                </div>
+                <div>
+                  <img src="image/2/8.png" class="margin-letter">
+                </div>
+                <div class="margin-letter">
+                  k2Engineで、インスタンシング描画するには、以下のようにします。
+                </div>
+                <div class="margin-letter">
+                  <code>
+                    <ol class="code-region row coll-11">
+                    <li>bool GameObject::Start()</li>
+                    <li>{</li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//第5引数に描画するモデルの最大数を設定する。</font></li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;m_modelRender.Init(<font style="color:lightcoral;">"sample.tkm"</font>, nullptr, 0, enModelUpAxisZ, true, 100);</li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;return true;</li>
+                    <li>}</li>
+                    <li></li>
+                    <li>void GameObject::Update()</li>
+                    <li>{</li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;Vector3 pos = {0.0f,0.0f,0.0f}</li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt; 100; i++)</li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pos.x += 50.f;</li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//UpdateInstancingDataで、それぞれの座標・回転・大きさを設定する。</font></li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m_modelRender.UpdateInstancingData(i, pos, m_rotation, m_scale);</li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;m_modelRender.Update();</li>
+                    <li>}</li>
+                    <li></li>
+                    <li>void GameObject::Render(RenderContext&amp; rc)</li>
+                    <li>{</li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//ドローコルは1回だけ。</font></li>
+                    <li>&nbsp;&nbsp;&nbsp;&nbsp;m_modelRender.Draw(rc);</li>
+                    <li>}</li>
+                    </ol></code>
+                </div>
+            </div>
+          </div>
+          <li id="2"><h2 class="margin-letter2">3.2 練習問題1</h2></li>
+          <div class="letter">
+            <div>
+                practice/FlyWeight/Practice1/Game.slnからVisualStudioを立ち上げてください。
+                実行してみると、100個のレバーが描画されています。
+                <div>
+                    <img src="image/2/5.png" class="margin-letter">
+                </div>
+                <div class="margin-letter">
+                    <span class="strong-letter">LeverRenderを改造して、レバーの描画をインスタンシング描画に変更してください。</span>
+                    <ul>
+                      <li>必要なModelRenderインスタンスは<span class="strong-letter">1つ</span>だけです。</li>
+                      <li>Answerに実装例がありますので、参考にしてください。</li>
+                    </ul>
+                </div>
+            </div>
+          </div>
+          <li id="3"><h2 class="margin-letter2">3.3 タイルベースの地面</h2></li>
+          <div class="letter">
+            <div>
+              もう1つ、FlyWeightパターンの活用事例を紹介しましょう。
+              <br>以下のようなゲームでは、ステージがタイル(マス目)で出来ており、1つ1つのタイルごとに様々なパラメータが設定されています。
+              <div>
+                <img src="image/2/6.jpg" class="margin-letter">
+                <br>ファイアーエムブレム覚醒より
+              </div>
+              <div class="margin-letter">
+                ごく普通に実装するとすれば、このような感じでしょうか。
+              </div>
+              <div class="margin-letter">
+                <code>
+                  <ol class="code-region row coll-11">
+                  <li><font style="color:lightgreen;font-style:italic;">//1つ1つのタイルを表す。</font></li>
+                  <li>struct Tile</li>
+                  <li>{</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//タイルのタイプ。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;enTile_Type s_tileType;</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//回避率補正。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;float s_evasionRate;</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//防御率補正。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;float s_deffenceRate;</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//攻撃率補正。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;float s_attackRate;</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//描画するモデル。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;Model s_model;</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                  <li>};</li>
+                  <li></li>
+                  <li>class World</li>
+                  <li>{</li>
+                  <li>public:</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//指定位置のタイルを取得。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;Tile* GetTile(const int x, const int y)</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return &m_tileList[x][y];</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                  <li>private:</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;Tile m_tileList[WIDHT][HEIGHT];</li>
+                  <li>};</li>
+                  </ol></code>
+              </div>
+              <div class="margin-letter">
+                一見、問題は無さそうに見えます。ですが、構造体のインスタンスを何個も保持していては、(インスタンシング描画でも話しましたが)メモリと処理速度に影響が出かねません。
+                ステージが広ければ尚更です。
+              </div>
+              <div class="margin-letter">
+                そこで、Fly Weightパターンを活用します。
+                <br>まず、Tileの配列をポインタにし、それぞれ種類別のTileインスタンスを用意します。
+              </div>
+              <div class="margin-letter">
+                <code>
+                  <ol class="code-region row coll-11">
+                  <li>class World</li>
+                  <li>{</li>
+                  <li>public:</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//指定位置のタイルを取得。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;Tile* GetTile(const int x, const int y)</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return m_tileList[x][y];</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                  <li>private:</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;Tile* m_tileList[WIDHT][HEIGHT];        <font style="color:lightgreen;font-style:italic;">//ポインタの配列にする。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;Tile m_tree;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//木のタイル。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;Tile m_flatGround;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//平地のタイル。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;Tile m_fort;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//砦のタイル。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;Tile m_sea;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//海のタイル。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//..</font></li>
+                  <li>};</li>
+                  </ol></code>
+              </div>
+              <div class="margin-letter">
+                そして、ステージ生成時に、配列に種類ごとのTileインスタンスのポインタを入れるようにします。
+              </div>
+              <div class="margin-letter">
+                <code>
+                  <ol class="code-region row coll-11">
+                  <li><font style="color:lightgreen;font-style:italic;">//ステージを生成する。</font></li>
+                  <li>void World::MakeStage()</li>
+                  <li>{</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt; WIDTH; i++)</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int j = 0; j &lt; HEIGHT; j++)</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//タイルのタイプが海なら。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (TileType == Type_Sea)</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//海タイルのポインタを入れる。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m_tileList[i][j] = &m_sea;</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//タイルのタイプが木なら。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;else if (TileType == Type_Tree)</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//木タイルのポインタを入れる。</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m_tileList[i][j] = &m_tree;</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<font style="color:lightgreen;font-style:italic;">//...</font></li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                  <li>&nbsp;&nbsp;&nbsp;&nbsp;}</li>
+                  <li>}</li>
+                  </ol></code>
+              </div>
+              <div class="margin-letter">
+                如何でしょうか。配列の要素をポインタにしたことにより、メモリの使用量を減らすことが出来ました。
+                この例ですと、「木タイル」や「海タイル」などを再利用していますね。
+                <br>このように、Fly Weightパターンは何かを大量に扱う際には非常に有効なデザインパターンです。
+              </div>
+            </div>
+          </div>
+          <li id="4"><h2 class="margin-letter2">3.4 練習問題2</h2></li>
+          <div class="letter">
+            <div>
+              practice/FlyWeight/Practice2/Game.slnからVisualStudioを立ち上げてください。
+              実行してみると、400個のレバーが描画されています。
+              <div>
+                <img src="image/2/7.png" class="margin-letter">
+              </div>
+              <div class="margin-letter">
+                <span class="strong-letter">WorldクラスとLeverクラスを改造して、各レバーをインスタンシング描画に変更してください。</span>
+                <br><span class="strong-letter">WorldクラスのGetEnLever関数で、指定位置に配置されているLeverの種類が取得できるようにしてください。</span>
+                <ul>
+                  <li>WorldクラスのLever変数の配列をLeverポインタの配列に変更してください。</li>
+                  <li>通常レバー・青いレバー・赤いレバーのLeverインスタンスをそれぞれ1つずつ用意し、そのインスタンスのポインタを配列に格納するようにしてください。</li>
+                  <li>Answerに実装例がありますので、参考にしてください。</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </ul>
+    </div>
+</body>
+</html>
